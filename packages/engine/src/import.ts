@@ -11,17 +11,22 @@ const kinds = new Set<TransactionKind>(['expense', 'revenue', 'expense_refund', 
 export function inspectCsv(text: string): { headers: string[]; records: string[][]; recordNumbers: number[]; errors: ImportIssue[] } {
   const fail = (code: string, message: string) => ({ headers: [], records: [], recordNumbers: [], errors: [{ row: null, code, message }] });
   if (text.length > MAX_BYTES || new TextEncoder().encode(text).length > MAX_BYTES) return fail('FILE_TOO_LARGE', 'CSV exceeds the 20 MB limit.');
+  if (text.includes('\0')) return fail('BINARY_CSV', 'CSV contains NUL bytes. Export a plain UTF-8 CSV file.');
   let headers: string[] = [], logicalRecord = 0, malformed = false, tooMany = false;
+  let limitIssue: { code: string; message: string } | undefined;
   const records: string[][] = [], recordNumbers: number[] = [];
   Papa.parse<string[]>(text, { delimiter: ',', skipEmptyLines: false, step(result, parser) {
     logicalRecord++;
     if (result.errors.length) { malformed = true; parser.abort(); return; }
+    if (result.data.length > 256) { limitIssue = { code: 'TOO_MANY_COLUMNS', message: 'CSV exceeds the 256-column limit. Export only relevant columns.' }; parser.abort(); return; }
+    if (result.data.some(value => value.length > 65_536)) { limitIssue = { code: 'FIELD_TOO_LARGE', message: 'CSV field exceeds the 65,536-character limit.' }; parser.abort(); return; }
     if (result.data.every(value => !value.trim())) return;
     if (!headers.length) { headers = result.data.map(value => value.trim()); return; }
     records.push(result.data); recordNumbers.push(logicalRecord);
     if (records.length > MAX_ROWS) { tooMany = true; parser.abort(); }
   } });
   if (malformed) return fail('MALFORMED_CSV', 'CSV quoting or structure is invalid. Check the export and try again.');
+  if (limitIssue) return fail(limitIssue.code, limitIssue.message);
   if (tooMany) return fail('TOO_MANY_ROWS', 'CSV exceeds the 100,000-row limit.');
   if (!headers.length || headers.some(value => !value) || new Set(headers).size !== headers.length) return fail('INVALID_HEADERS', 'CSV requires unique, nonempty column headers.');
   return { headers, records, recordNumbers, errors: [] };

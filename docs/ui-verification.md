@@ -102,3 +102,15 @@ The complete four-block gate above remains PASS for the current website. The app
 - C-5 PASS: copy makes no fabricated customer, savings, performance or certification claim.
 
 Updated screenshots are local verification artifacts: reports/site-your-ai-mobile.png and reports/site-your-ai-desktop.png. The earlier verification limitations still apply. No live AI-provider/accounting connector integration or Cloudflare deployment was performed by this test.
+
+## Security regression addendum, 2 November 2026
+
+The approved interface and four-block PASS gate above are retained. This change modifies import validation and response headers; it adds no visual assets, layout, navigation or product claims.
+
+- R-24 / R-26 PASS: the final production-site test completed the existing imports, OCR, review, navigation, AI handoff, scenarios, downloads, print callback, cancellation and reset flows with every configured security header emulated on all static responses.
+- R-25 / R-32 PASS: all-route mobile overflow/axe checks, keyboard entry and existing native labels passed under the updated policies.
+- R-35 PASS: the final full build/test run passed 75/75 tests; the real browser integration harness and production-site test both passed after the ZIP consistency fix.
+- R-36 / C-5 PASS: a synthetic vendor containing HTML-like markup created no image element or script effect; the actual CSV download preserved the formula-looking label as text. No production security certification or live Cloudflare configuration is claimed.
+- C-4 PASS: invalid document checks preserve explicit error/review states; malformed or ambiguous workbooks cannot silently substitute worksheet amounts. Ordinary streamed ZIP data-descriptor entries and real OCR fixtures still pass.
+
+These are local/browser regression checks. Public HTTPS probing returned Cloudflare 525 and the application headers were not present on that error response. Production TLS/routing, edge rules and private vulnerability reporting remain unverified account-side items documented in SECURITY.md and cloudflare.md.

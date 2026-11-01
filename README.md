@@ -46,6 +46,8 @@ Configure these command/arguments in a client that supports local stdio MCP. Do 
 
 Run `npm run build`, then `npm run preview` to open the working site. `apps/web` preserves the supplied Lovable appearance and connects directly to the local analysis engine. The [browser integration guide](docs/browser-integration.md) documents the shared API. [Cloudflare instructions](docs/cloudflare.md) describe deployment of the static production build.
 
+[Security controls and limits](SECURITY.md) cover document validation, spreadsheet-safe exports, browser headers, local MCP access and the separate AI-provider boundary. Cloudflare account-side release checks and a prepared narrow scan-path rule are documented; source configuration does not mean they are live.
+
 The canonical repository is raducanuandrei/Costsieve. The visual source was transferred manually from the separately owned motion-layer-mosaic repository. No Lovable GitHub App, Git sync, Lovable build plugin or automatic Lovable commits are required here. No production deployment or domain change is part of this implementation.
 
 ## Boundaries

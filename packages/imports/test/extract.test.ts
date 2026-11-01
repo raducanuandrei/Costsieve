@@ -39,7 +39,7 @@ test('rejects legacy formats, malformed documents and page limits without a misl
 });
 
 test('checks image dimensions before decoding large images', () => {
-  const png = new Uint8Array(24); png.set([137, 80, 78, 71, 13, 10, 26, 10]); png.set([73, 72, 68, 82], 12);
+  const png = new Uint8Array(33); png.set([137, 80, 78, 71, 13, 10, 26, 10]); new DataView(png.buffer).setUint32(8, 13); png.set([73, 72, 68, 82], 12);
   new DataView(png.buffer).setUint32(16, 100_000); new DataView(png.buffer).setUint32(20, 100_000);
   assert.throws(() => imageDimensions(png), /20 megapixel/i);
 });

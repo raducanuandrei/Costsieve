@@ -1,9 +1,24 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { importLedgerCsv, importSubscriptionsCsv } from '../src/import.ts';
+import { importLedgerCsv, importSubscriptionsCsv, inspectCsv } from '../src/import.ts';
 
 const header = 'date,vendor,category,amount,currency,kind,transaction_id';
 const csv = (rows: string[]) => [header, ...rows].join('\n');
+
+test('bounds CSV width, individual fields and binary content without returning partial data', () => {
+  for (const [text, code] of [
+    [Array.from({ length: 257 }, (_, i) => `column${i}`).join(','), 'TOO_MANY_COLUMNS'],
+    [`${header}\n2026-01-01,A,x,1,USD,expense,1\n${'x'.repeat(65_537)}`, 'FIELD_TOO_LARGE'],
+    [`${header}\n2026-01-01,A\0B,x,1,USD,expense,1`, 'BINARY_CSV'],
+  ]) {
+    const parsed = inspectCsv(text!);
+    assert.equal(parsed.errors[0]?.code, code);
+    assert.equal(parsed.records.length, 0);
+  }
+  const boundary = inspectCsv(`name,notes\nA,"${'x'.repeat(65_536)}"`);
+  assert.deepEqual(boundary.errors, []);
+  assert.equal(boundary.records[0]?.[1]?.length, 65_536);
+});
 
 test('imports exact decimal magnitudes, explicit directions and quoted multiline values', () => {
   const result = importLedgerCsv(csv([

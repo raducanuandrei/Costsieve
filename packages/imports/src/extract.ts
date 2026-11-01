@@ -21,6 +21,8 @@ export function createExtractor(runtime: ExtractionRuntime): DocumentExtractor {
       const sheet = options.fileOptions.sheet ? sheets.find(sheet => sheet.sheet === options.fileOptions.sheet) : sheets[0];
       if (!sheet) throw new Error('The selected worksheet does not exist.');
       if (sheet.data.length > 100_001) throw new Error('Worksheet exceeds the 100,000-record limit.');
+      if (sheet.data.some(row => row.length > 256)) throw new Error('Worksheet exceeds the 256-column limit. Export only relevant columns.');
+      if (sheet.data.some(row => row.some(value => typeof value === 'string' && value.length > 65_536))) throw new Error('Worksheet field exceeds the 65,536-character limit.');
       const header = sheet.data[0];
       if (!header) throw new Error('Selected worksheet is empty.');
       const records: unknown[][] = [], recordNumbers: number[] = [];
@@ -31,10 +33,12 @@ export function createExtractor(runtime: ExtractionRuntime): DocumentExtractor {
       }
       return { kind: 'table', headers: header.map(value => value === null || value === undefined ? '' : String(value)), records, recordNumbers, sheet: sheet.sheet };
     }
+    const isPdf = file.name.toLowerCase().endsWith('.pdf');
+    if (!isPdf) imageDimensions(file.bytes, file.name.split('.').at(-1)?.toLowerCase());
     const recognizer = runtime.recognizer(options);
     try {
-      if (!file.name.toLowerCase().endsWith('.pdf')) {
-        imageDimensions(file.bytes); options.consumeOcrPage();
+      if (!isPdf) {
+        options.consumeOcrPage();
         const raw = await recognizer.recognize(file.bytes);
         return { kind: 'invoice', fields: extractInvoiceFields(raw), pages: 1, method: 'ocr' };
       }

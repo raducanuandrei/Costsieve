@@ -15,7 +15,7 @@
     "dev": "npm run dev -w @costsieve/web",
     "preview": "npm run preview -w @costsieve/web",
     "test:site": "node --test test/site.test.ts",
-    "test": "npm run build && node --test packages/engine/test/*.test.ts packages/imports/test/*.test.ts packages/mcp/test/*.test.ts test/skill-package.test.ts",
+    "test": "npm run build && node --test packages/engine/test/*.test.ts packages/imports/test/*.test.ts packages/mcp/test/*.test.ts test/skill-package.test.ts test/security.test.ts",
     "test:engine": "npm test -w @costsieve/engine",
     "check:browser": "npm run check:browser -w @costsieve/imports",
     "test:browser": "npm run check:browser && node --test test/browser.test.ts",
