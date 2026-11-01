@@ -12,3 +12,10 @@ This records the user's supplied Lovable site and explicit animation request, no
 - Filter mode: antislop during, explicitly selected by owner. ENERGY 2 / RHYTHM 2 / MOTION 2, using existing direction. No new logo/media, fake statistics or testimonials.
 - Existing chart, search, slider and download icons identify actual analysis/review/scenario/export functions; no decorative generic symbols were added. Uppercase mono labels identify stage/context; tabular figures align financial values.
 - Spacing separates upload, confirmation and scenario decisions. Rounded metal buttons identify actions, restrained card surfaces group related data, and square-edged native form fields distinguish editing from navigation. Blur is limited to the existing sticky header.
+
+## Try with your AI
+
+- Preserve the approved palette, typography, navigation and ENERGY 2 / RHYTHM 2 / MOTION 2 direction. No additional motion or brand assets are needed for reviewing sensitive information.
+- Separate capability/setup guidance, optional data selection and the final preview so people can use the workflow without attaching business data.
+- A bounded, scrollable monospace preview shows the exact transferable artifact; native checkboxes/selects and explicit confirmation make inclusion and changes visible. The primary metal action identifies copying the reviewed brief.
+- Vendor/customer/category labels are a separate opt-in because financial counterparties can reveal private business relationships. Neutral surfaces preserve reading contrast; green/red remain reserved for financial effects in the report.

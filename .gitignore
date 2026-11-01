@@ -9,3 +9,4 @@ playwright-report/
 .superpowers/
 .tanstack/
 packages/imports/assets/
+apps/web/public/skills/

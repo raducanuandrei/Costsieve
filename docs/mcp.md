@@ -21,6 +21,7 @@ Approve the smallest required directory. Repeat --allow-root for additional dire
 | Tool | Inputs and result |
 | --- | --- |
 | prepare_analysis | paths (absolute local paths), optional fileOptions keyed by distinct filename -> draft id, source-qualified extracted field preview, issues and reconciliation candidates. Or provide draftId with offset/limit to page through review records. |
+| prepare_connected_analysis | csv (at most 2 MiB UTF-8), sourceLabel -> the same in-memory review flow for a canonical ledger already read through the AI host's approved connectors. No new account connection, filesystem read or file write. Preserve original connector/cell references separately: CSV rows are a temporary representation, not additional invoices. |
 | complete_analysis | draftId, decision -> confirmed analysis, bounded recommendations and at most three initial follow-up questions. |
 | simulate_changes | draftId, currency, selections (recommendationId plus explicit reductionPercent or replacementCost where no evidence-backed action exists), optional implementationCost -> hypothetical imported-period effect. |
 | get_action_guide | draftId, recommendationId -> versioned steps, verification and rollback. |
@@ -48,4 +49,6 @@ One active analysis per server; it expires after 30 minutes of inactivity or exp
 
 Review records are paginated; report groups/currencies/recommendations default to 20 per page with nextOffset/counts. Evidence previews are limited to 10 targets per recommendation/question. Totals for each displayed currency cover all its confirmed records. Simulating by recommendationId uses the complete internally stored population, not the truncated preview. Request successive report pages for the remaining groups/currencies; outputs have a 512 KiB bound.
 
-The tests exercise a real local SDK stdio client, six-tool discovery, analysis, scenarios, export and blocked filesystem access. A client-specific hosted integration, public registry listing or paid model API is not included.
+Connected CSV must use the documented ledger columns/directions, not raw document text, secrets or a scope-wide account dump. Oversized requests must be narrowed explicitly; the server has one active session, so replacing it with another batch does not combine results. The stdio input buffer allows 16 MiB for JSON escaping of the 2 MiB CSV; output remains bounded to 512 KiB. The CLI still requires an explicit startup allow-root; the connector bridge cannot widen it.
+
+The tests exercise a real local SDK stdio client, seven-tool discovery, connected-ledger analysis (including a request larger than 1 MiB), scenarios, export and blocked filesystem access. A client-specific hosted integration, public registry listing or paid model API is not included. The portable costsieve-audit skill reuses available host connectors and asks for missing context directly; see your-ai.md.

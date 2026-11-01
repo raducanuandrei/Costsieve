@@ -26,13 +26,13 @@ test('allows selected local files and rejects traversal, outside roots and symli
   await assert.rejects(() => resolveApprovedFile(join(allowed, 'ledger.csv'), []), /root/i);
 });
 
-test('exposes six real MCP tools and produces the same financial result as the engine', async () => {
+test('exposes seven real MCP tools and produces the same financial result as the engine', async () => {
   const server = createCostSieveServer({ allowedRoots: [allowed] });
   const client = new Client({ name: 'costsieve-test', version: '1.0.0' });
   const [a, b] = InMemoryTransport.createLinkedPair();
   await server.connect(a); await client.connect(b);
   try {
-    const tools = await client.listTools(); assert.equal(tools.tools.length, 6);
+    const tools = await client.listTools(); assert.equal(tools.tools.length, 7);
     const prepared = await client.callTool({ name: 'prepare_analysis', arguments: { paths: [join(allowed, 'ledger.csv')] } });
     const draft = prepared.structuredContent as { id: string; records: unknown[] };
     assert.ok(draft.id); assert.equal(draft.records.length, 1);
@@ -55,7 +55,7 @@ test('works through an actual stdio client process without stdout contamination 
   const protocolErrors: unknown[] = []; client.onerror = error => protocolErrors.push(error);
   await client.connect(transport);
   try {
-    assert.equal((await client.listTools()).tools.length, 6);
+    assert.equal((await client.listTools()).tools.length, 7);
     const blocked = await client.callTool({ name: 'prepare_analysis', arguments: { paths: [join(outside, 'private.csv')] } });
     assert.equal(blocked.isError, true);
     const prepared = await client.callTool({ name: 'prepare_analysis', arguments: { paths: [join(allowed, 'ledger.csv')] } });
@@ -65,8 +65,32 @@ test('works through an actual stdio client process without stdout contamination 
     assert.equal(analysis.report.currencies[0]?.grossExpense, '100');
     const simulated = await client.callTool({ name: 'simulate_changes', arguments: { draftId: id, currency: 'USD', selections: [{ recommendationId: analysis.recommendations[0]!.id, reductionPercent: '25' }], implementationCost: '5' } });
     assert.equal((simulated.structuredContent as { netBenefit: string }).netBenefit, '20');
+    const connectedCsv = 'date,vendor,category,amount,currency,kind\n' + '2026-09-01,Tools,software,1,USD,expense\n'.repeat(30_000);
+    assert.ok(Buffer.byteLength(connectedCsv) > 1024 * 1024);
+    const connected = await client.callTool({ name: 'prepare_connected_analysis', arguments: { csv: connectedCsv, sourceLabel: 'Approved connected ledger' } }, undefined, { timeout: 30_000 });
+    assert.equal(connected.isError, undefined);
+    assert.equal((connected.structuredContent as { recordCount: number }).recordCount, 30_000);
     assert.deepEqual(protocolErrors, []);
   } finally { await client.close(); }
+});
+
+test('connected ledger data uses the same review pipeline without files or new connector credentials', async () => {
+  const server = createCostSieveServer({ allowedRoots: [allowed] }), client = new Client({ name: 'connected-test', version: '1.0.0' });
+  const [a, b] = InMemoryTransport.createLinkedPair(); await server.connect(a); await client.connect(b);
+  try {
+    const prepared = await client.callTool({ name: 'prepare_connected_analysis', arguments: { csv, sourceLabel: 'Approved accounting export, September' } });
+    assert.equal(prepared.isError, undefined);
+    const draft = prepared.structuredContent as { id: string; sourceLabel: string; records: unknown[] };
+    assert.match(draft.sourceLabel, /Approved accounting/); assert.equal(draft.records.length, 1);
+    const result = await client.callTool({ name: 'complete_analysis', arguments: { draftId: draft.id, decision: {} } });
+    assert.equal((result.structuredContent as any).analysis.report.currencies[0].grossExpense, '100');
+    const invalid = await client.callTool({ name: 'prepare_connected_analysis', arguments: { csv: 'broken', sourceLabel: 'Bad export' } });
+    const invalidDraft = invalid.structuredContent as { documents: { issues: string[] }[] };
+    assert.ok(invalid.isError || invalidDraft.documents.some(doc => doc.issues.length));
+    const large = await client.callTool({ name: 'prepare_connected_analysis', arguments: { csv: '€'.repeat(800_000), sourceLabel: 'Oversized' } });
+    assert.equal(large.isError, true);
+    assert.deepEqual((await readdir(allowed)).filter(name => name !== 'escape').sort(), ['ledger.csv']);
+  } finally { await client.close(); await server.close(); }
 });
 
 test('returns usable bounded summaries and questions for a large permitted ledger', async () => {

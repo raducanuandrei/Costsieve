@@ -10,12 +10,12 @@
     "node": ">=22.18.0"
   },
   "scripts": {
-    "assets": "node scripts/prepare-assets.mjs",
+    "assets": "node scripts/prepare-assets.mjs && node scripts/build-skill.mjs",
     "build": "npm run assets && npm run build -w @costsieve/engine && npm run build -w @costsieve/imports && npm run build -w @costsieve/mcp && npm run build -w @costsieve/web",
     "dev": "npm run dev -w @costsieve/web",
     "preview": "npm run preview -w @costsieve/web",
     "test:site": "node --test test/site.test.ts",
-    "test": "npm run build && node --test packages/engine/test/*.test.ts packages/imports/test/*.test.ts packages/mcp/test/*.test.ts",
+    "test": "npm run build && node --test packages/engine/test/*.test.ts packages/imports/test/*.test.ts packages/mcp/test/*.test.ts test/skill-package.test.ts",
     "test:engine": "npm test -w @costsieve/engine",
     "check:browser": "npm run check:browser -w @costsieve/imports",
     "test:browser": "npm run check:browser && node --test test/browser.test.ts",
@@ -24,6 +24,7 @@
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
     "@playwright/test": "1.64.1",
+    "fflate": "0.8.3",
     "pdf-lib": "1.17.1"
   }
 }

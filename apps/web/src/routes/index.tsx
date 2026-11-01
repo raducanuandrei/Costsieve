@@ -55,6 +55,7 @@ function Home() {
             <Link to="/analyze" className={btn.primary}>Start an analysis</Link>
             <Link to="/demo" className={btn.outline}>View synthetic demo</Link>
           </div>
+          <Link to="/your-ai" className="mt-5 inline-block py-2 text-sm text-accent underline">Try with your AI and existing connectors</Link>
         </div>
       </section>
 

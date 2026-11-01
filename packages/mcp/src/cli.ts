@@ -13,7 +13,8 @@ try {
     if (!values['allow-root']?.length) throw new Error('At least one explicit --allow-root is required.');
     const roots = await Promise.all(values['allow-root'].map(async path => { const root = await realpath(resolve(path)); if (!(await stat(root)).isDirectory()) throw new Error('Approved roots must be existing directories.'); return root; }));
     const server = createCostSieveServer({ allowedRoots: roots });
-    await server.connect(new StdioServerTransport(process.stdin, process.stdout, { maxBufferSize: 1024 * 1024 }));
+    // A 2 MiB connected CSV can expand up to sixfold when JSON-escaped on the wire.
+    await server.connect(new StdioServerTransport(process.stdin, process.stdout, { maxBufferSize: 16 * 1024 * 1024 }));
     const finish = async () => { await server.close(); process.exitCode = 0; };
     process.once('SIGINT', finish); process.once('SIGTERM', finish); process.stdin.once('end', finish);
   }

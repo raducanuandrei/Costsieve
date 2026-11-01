@@ -9,7 +9,8 @@ Free, open-source business cost analysis by NovAPR Technologies. Process documen
 - Mandatory invoice confirmation, correction/exclusion of invalid data, and invoice/payment reconciliation review.
 - Separate-currency spending summaries, source-qualified evidence, at most three initial context questions, seat-usage recommendations and implementation guides.
 - Exact-record cost scenarios that reject overlapping alternatives, disclose their period and subtract declared implementation cost.
-- Safe summary exports, session reset/30-minute inactivity expiry, browser-compatible API and six local MCP tools.
+- Safe summary exports, session reset/30-minute inactivity expiry, browser-compatible API and seven local MCP tools, including an approved connected-ledger bridge.
+- Try with your AI: complete portable audit skill, existing-connector discovery, autonomous public research and direct missing-context questions. Optional report sharing has a preview, hidden names by default and explicit confirmation.
 
 ## Install and check
 
@@ -28,6 +29,8 @@ Build prepares the OCR/PDF worker, WASM and language files from pinned installed
 On a clean Linux CI machine run `npx playwright install --with-deps chromium` before browser tests. Local browser tests use installed Chrome; CI uses Playwright Chromium.
 
 ## Use from an AI agent
+
+Open `/your-ai` in the website to copy the complete audit workflow or download the installable `costsieve-audit` skill. No business report is required: the assistant starts with its existing approved connectors. An optional report snapshot excludes raw documents/identifiers and uses one currency. The website does not authenticate to a model provider or carry out the assistant's research. [Skill, setup and privacy details](docs/your-ai.md).
 
 Launch the local stdio server directly with Node, specifying the directory it may read:
 

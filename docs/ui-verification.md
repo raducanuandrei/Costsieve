@@ -79,3 +79,26 @@ Each PASS refers to the built interface and the checks above, not an assertion a
 ## Limits of this verification
 
 Chrome desktop with a mobile viewport was tested; physical mobile devices, Safari, Firefox, screen-reader sessions, full WCAG certification and Lighthouse/production performance scores were not measured. Automated axe checks are not a full accessibility audit. Print callback and print styles were checked; no exported PDF renderer was independently validated. OCR uses synthetic test invoices and remains heuristic with mandatory human confirmation. Cloudflare itself was not deployed; production response headers, deep links and worker/model files need the documented deployment smoke check. No real sponsorship payment destination is configured.
+
+## Try with your AI addendum, 1 November 2026
+
+The complete four-block gate above remains PASS for the current website. The approved visual direction is retained; DESIGN.md records reasons for the preview, section boundaries, native controls and separate names opt-in. No new logo, navigation scheme, motion treatment, color palette, icon set or unsupported product claim was introduced.
+
+- R-02 PASS: source scan found no em dash in the new page, brief builder or skill copy.
+- R-03 PASS: production Chrome test checked all routes at 375px, including /your-ai; 375px and 1440px screenshots of the new page were visually inspected.
+- R-24 PASS: homepage/report links reach /your-ai; setup guidance and the real static skill download are usable; all existing routes and fallback still load.
+- R-25 PASS: axe found zero violations on the new page and all tested routes under the production content policy.
+- R-26 PASS: report inclusion, currency/names choices, preview, copy, real Markdown download and ZIP download have working handlers exercised in test:site. Download text equals the displayed preview; copy receives that same text.
+- R-27 PASS: no-report use, blocked pending scenario edits, consent invalidation, omitted mismatched-currency scenarios, copy success and clipboard-denial fallback were exercised. Generic instructions remain usable without sensitive report data.
+- R-32 PASS: native labeled inputs/select/textarea/buttons preserve keyboard access and existing visible focus; automated label queries locate each new control. No custom keyboard interaction was added.
+- R-35 PASS: final production build/type check and test:site passed; test:browser also passed. Current complete build/test suite passed 68/68 tests. Network observation found only permitted local static GETs and no business-data requests or page errors.
+- R-36 PASS: the page states provider capabilities/privacy limits and differentiates proposed effects from carried-out actions; no fake sign-in, assured savings or local-model claim is displayed.
+- R-37 PASS: existing user-supplied direction, during-mode session choice and ENERGY 2 / RHYTHM 2 / MOTION 2 remain recorded in DESIGN.md.
+- R-38 PASS: the feature matches tested behavior; fictional skill evaluations are labeled as simulations in skill-validation.md.
+- C-1 PASS: the new layout/preview/label decisions have specific reasons in DESIGN.md.
+- C-2 PASS: every new control is exercised, including actual file downloads and blocked-copy fallback.
+- C-3 PASS: sections provide capability guidance, explicit data selection and the exact artifact; no filler or promotional section was added.
+- C-4 PASS: names/currency consent resets, no report, pending changes, currency mismatch, mobile overflow and copy failure are covered.
+- C-5 PASS: copy makes no fabricated customer, savings, performance or certification claim.
+
+Updated screenshots are local verification artifacts: reports/site-your-ai-mobile.png and reports/site-your-ai-desktop.png. The earlier verification limitations still apply. No live AI-provider/accounting connector integration or Cloudflare deployment was performed by this test.

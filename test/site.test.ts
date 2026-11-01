@@ -10,14 +10,16 @@ import { invoicePdf, workbook } from '../packages/imports/test/fixtures.ts';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 
-test('the transferred site runs a real local document workflow, scenarios, exports, reset and all routes', { timeout: 120_000 }, async () => {
-  const child = spawn(process.execPath, [`${root}/node_modules/vite/bin/vite.js`, 'preview', '--host', '127.0.0.1', '--port', '4178', '--strictPort'], { cwd: `${root}/apps/web`, stdio: 'ignore' });
+test('the transferred site runs a real local document workflow, scenarios, exports, reset and all routes', { timeout: 240_000 }, async () => {
+  const child = spawn(process.execPath, [`${root}/node_modules/vite/bin/vite.js`, 'preview', '--host', '127.0.0.1', '--port', '4178', '--strictPort'], { cwd: `${root}/apps/web`, stdio: ['ignore', 'pipe', 'pipe'] });
+  let startup = ''; child.stdout.on('data', data => { startup += String(data); }); child.stderr.on('data', data => { startup += String(data); });
   const url = 'http://127.0.0.1:4178';
   let ready = false;
-  for (let i = 0; i < 100; i++) { try { if ((await fetch(url)).ok) { ready = true; break; } } catch {} await new Promise(resolve => setTimeout(resolve, 100)); }
+  const startupDeadline = Date.now() + 60_000;
+  while (Date.now() < startupDeadline && child.exitCode === null) { try { if ((await fetch(url)).ok) { ready = true; break; } } catch {} await new Promise(resolve => setTimeout(resolve, 100)); }
   const browser = await chromium.launch({ ...(process.env.CI ? {} : { channel: 'chrome' }), headless: true });
   try {
-    assert.ok(ready, 'The built site must start');
+    assert.ok(ready, `The built site must start: ${startup.slice(-2000)}`);
     const context = await browser.newContext({ viewport: { width: 375, height: 812 }, reducedMotion: 'reduce' });
     const page = await context.newPage();
     const policy = (await readFile(`${root}/apps/web/public/_headers`, 'utf8')).match(/Content-Security-Policy: (.+)/)![1]!.trim();
@@ -36,6 +38,33 @@ test('the transferred site runs a real local document workflow, scenarios, expor
     await page.getByRole('heading', { name: 'Your spending report' }).waitFor();
     assert.match(await page.locator('[data-testid="net-expense"]').first().innerText(), /100/);
     assert.match(await page.locator('[data-testid="recorded-result"]').first().innerText(), /400/);
+    await page.getByRole('link', { name: 'Try with your AI', exact: true }).click();
+    await page.getByRole('heading', { name: 'Try with your AI', exact: true }).waitFor();
+    const aiPreview = page.getByLabel('AI audit brief', { exact: true });
+    assert.doesNotMatch(await aiPreview.inputValue(), /PRIVATE_SITE_VENDOR/);
+    await page.getByLabel('Include current report', { exact: true }).check();
+    assert.equal(await page.getByRole('button', { name: 'Copy audit brief', exact: true }).isDisabled(), true);
+    await page.getByLabel('Include vendor, customer and category names', { exact: true }).check();
+    assert.match(await aiPreview.inputValue(), /PRIVATE_SITE_VENDOR/);
+    await page.getByLabel('I reviewed this brief and choose to share these figures with my AI provider.', { exact: true }).check();
+    await page.getByLabel('Include vendor, customer and category names', { exact: true }).uncheck();
+    assert.equal(await page.getByRole('button', { name: 'Download audit brief', exact: true }).isDisabled(), true);
+    await page.getByLabel('I reviewed this brief and choose to share these figures with my AI provider.', { exact: true }).check();
+    const briefText = await aiPreview.inputValue(); assert.doesNotMatch(briefText, /PRIVATE_SITE_VENDOR/);
+    const briefDownload = page.waitForEvent('download'); await page.getByRole('button', { name: 'Download audit brief', exact: true }).click();
+    assert.equal(await readFile((await (await briefDownload).path())!, 'utf8'), briefText);
+    await page.evaluate(() => { (window as any).copiedBrief = ''; Object.defineProperty(navigator.clipboard, 'writeText', { configurable: true, value: async (value: string) => { (window as any).copiedBrief = value; } }); });
+    await page.getByRole('button', { name: 'Copy audit brief', exact: true }).click();
+    assert.equal(await page.evaluate(() => (window as any).copiedBrief), briefText);
+    const skillDownload = page.waitForEvent('download'); await page.getByRole('link', { name: 'Download complete skill', exact: true }).click();
+    assert.equal((await skillDownload).suggestedFilename(), 'costsieve-audit.zip');
+    const aiAudit = await new AxeBuilder({ page }).analyze(); assert.deepEqual(aiAudit.violations.map(v => v.id), []);
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.screenshot({ path: `${root}/reports/site-your-ai-mobile.png`, fullPage: true });
+    await page.setViewportSize({ width: 1440, height: 1000 }); await page.screenshot({ path: `${root}/reports/site-your-ai-desktop.png`, fullPage: true });
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.getByRole('link', { name: 'Report', exact: true }).click();
     await page.getByLabel('Select action 1').check();
     await page.getByLabel('Assumed reduction (%) for action 1').fill('20');
     await page.getByLabel('Implementation cost').fill('5');
@@ -51,6 +80,12 @@ test('the transferred site runs a real local document workflow, scenarios, expor
     await page.getByLabel('Implementation cost').fill('40');
     await page.getByRole('link', { name: 'Docs', exact: true }).click(); await page.getByRole('link', { name: 'Report', exact: true }).click();
     assert.equal(await page.getByRole('button', { name: 'Export JSON', exact: true }).isDisabled(), true);
+    await page.getByRole('link', { name: 'Try with your AI', exact: true }).click(); await page.getByLabel('Include current report', { exact: true }).check();
+    await page.getByRole('alert').filter({ hasText: /pending changes/ }).waitFor();
+    assert.equal(await page.getByRole('button', { name: 'Copy audit brief', exact: true }).isDisabled(), true);
+    await page.getByLabel('Include current report', { exact: true }).uncheck();
+    assert.equal(await page.getByRole('button', { name: 'Copy audit brief', exact: true }).isDisabled(), false);
+    await page.getByRole('link', { name: 'Report', exact: true }).click();
     await page.getByRole('button', { name: 'Apply scenario', exact: true }).click();
     await page.getByRole('button', { name: 'How to implement', exact: true }).first().click();
     await page.getByText('Review a major vendor', { exact: true }).waitFor();
@@ -105,7 +140,15 @@ test('the transferred site runs a real local document workflow, scenarios, expor
     await page.getByRole('button', { name: 'Previous records', exact: true }).click(); await page.getByRole('button', { name: 'Analyze confirmed data', exact: true }).click();
     await page.getByRole('heading', { name: 'Your spending report' }).waitFor(); await page.getByText(/Partial coverage: omitted amounts remain unknown/).waitFor();
     await page.getByLabel('Scenario currency', { exact: true }).selectOption('EUR'); await page.getByRole('button', { name: 'Apply scenario', exact: true }).click(); assert.match(await page.getByTestId('net-benefit').innerText(), /EUR 0/);
+    await page.getByRole('link', { name: 'Try with your AI', exact: true }).click(); await page.getByLabel('Include current report', { exact: true }).check();
+    await page.getByLabel('Report currency', { exact: true }).selectOption('USD');
+    await page.getByText('The applied scenario uses another currency and is omitted from this snapshot.', { exact: true }).waitFor();
+    await page.getByLabel('I reviewed this brief and choose to share these figures with my AI provider.', { exact: true }).check();
+    await page.getByLabel('Report currency', { exact: true }).selectOption('EUR');
+    assert.equal(await page.getByRole('button', { name: 'Copy audit brief', exact: true }).isDisabled(), true);
+    await page.getByRole('link', { name: 'Report', exact: true }).click();
     await page.getByRole('button', { name: 'Reset analysis', exact: true }).click();
+    await page.getByRole('link', { name: 'Begin an analysis', exact: true }).click();
     await page.getByLabel('Business documents').setInputFiles({ name: 'cancel.png', mimeType: 'image/png', buffer: canvas.toBuffer('image/png') });
     await page.getByRole('button', { name: 'Review documents', exact: true }).click(); await page.getByRole('button', { name: 'Cancel processing', exact: true }).click();
     await page.getByRole('heading', { name: 'Analyze your spending', exact: true }).waitFor();
@@ -119,11 +162,16 @@ test('the transferred site runs a real local document workflow, scenarios, expor
     await page.getByLabel('Keep this record for the same purchase').selectOption({ index: 1 });
     await page.getByLabel(/Represented elsewhere:/).check(); await page.getByRole('button', { name: 'Analyze confirmed data', exact: true }).click();
     await page.getByRole('heading', { name: 'Your spending report' }).waitFor(); assert.match(await page.getByTestId('net-expense').innerText(), /120/);
-    for (const route of ['/', '/demo', '/docs', '/methodology', '/privacy', '/support', '/about', '/changelog', '/missing']) {
+    for (const route of ['/', '/demo', '/your-ai', '/docs', '/methodology', '/privacy', '/support', '/about', '/changelog', '/missing']) {
       await page.goto(`${url}${route}`); await page.locator('h1').waitFor(); assert.equal(await page.locator('h1').count(), 1);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `No mobile overflow: ${route}`);
       const routeAudit = await new AxeBuilder({ page }).analyze(); assert.deepEqual(routeAudit.violations.map(v => `${route}: ${v.id} ${JSON.stringify(v.nodes.map(n => n.target))}`), []);
     }
+    await page.goto(`${url}/your-ai`);
+    assert.equal(await page.getByLabel('Include current report', { exact: true }).count(), 0);
+    assert.equal(await page.getByRole('button', { name: 'Copy audit brief', exact: true }).isDisabled(), false);
+    await page.evaluate(() => Object.defineProperty(navigator.clipboard, 'writeText', { configurable: true, value: async () => { throw new Error('Clipboard denied'); } }));
+    await page.getByRole('button', { name: 'Copy audit brief', exact: true }).click(); await page.getByRole('alert').filter({ hasText: /browser blocked copying/ }).waitFor();
     await page.goto(`${url}/demo`); await page.getByRole('heading', { name: 'Demo spending report' }).waitFor();
     await page.getByRole('button', { name: 'Reset analysis', exact: true }).click();
     await page.getByRole('heading', { name: 'Synthetic demo', exact: true }).waitFor();

@@ -1,0 +1,4 @@
+interface:
+  display_name: "CostSieve business audit"
+  short_description: "Audit costs using your existing connectors"
+  default_prompt: "Use $costsieve-audit to audit my business costs, research alternatives and improve efficiency using my connected sources."
