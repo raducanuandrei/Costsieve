@@ -101,3 +101,29 @@ test('detects distinct hash/colon invoice references from the same supplier', ()
     assert.throws(() => extractInvoiceFields(`Supplier: Acme\n${label}001\nDate: 2026-09-01\nGrand total: 120.00 USD\nSupplier: Acme\n${label}002\nDate: 2026-10-01\nGrand total: 120.00 USD`), /multiple|split/i);
   }
 });
+
+test('exports the active scenario and labels synthetic data without changing financial calculations', async () => {
+  const session = new AnalysisSession({ dataOrigin: 'SYNTHETIC_DEMO' });
+  const draft = await session.prepare([bank()]); const result = session.complete(draft.id, {});
+  assert.equal(result.analysis.report.dataOrigin, 'SYNTHETIC_DEMO');
+  session.simulate(draft.id, [{ id: 'reduce', targetRecordIds: [draft.records[0]!.recordId], reductionPercent: '20' }], { currency: 'USD', implementationCost: '5' });
+  assert.equal(JSON.parse(session.report(draft.id, 'json')).scenario.netBenefit, '19');
+  assert.match(session.report(draft.id, 'csv'), /netBenefit,19,HYPOTHETICAL/);
+});
+
+test('a rejected usage update cannot export a previous hidden scenario', async () => {
+  const session = new AnalysisSession(); const draft = await session.prepare([bank()]);
+  session.complete(draft.id, { corrections: [{ recordId: draft.records[0]!.recordId, fields: { amount: '10' } }] });
+  const targetRecordIds = [draft.records[0]!.recordId];
+  session.simulate(draft.id, [{ id: 'reduce', targetRecordIds, reductionPercent: '20' }], { currency: 'USD' });
+  assert.throws(() => session.complete(draft.id, { usage: [{ targetRecordIds, paidSeats: 1, activeSeats: 2, uniformPricing: true, reductionAllowed: true }] }), /seat/i);
+  assert.equal(JSON.parse(session.report(draft.id, 'json')).scenario, undefined);
+});
+
+test('review activity renews inactivity expiry without cloning the whole draft', async () => {
+  let now = 0; const session = new AnalysisSession({ now: () => now, ttlMs: 1000 });
+  const draft = await session.prepare([bank()]); now = 900;
+  session.keepAlive(draft.id); now = 1500;
+  assert.equal(session.review(draft.id).id, draft.id);
+  now = 2600; assert.throws(() => session.keepAlive(draft.id), /expired|active/i);
+});

@@ -1,4 +1,6 @@
-# Interfața și animațiile — etapa următoare
+# Interfața CostSieve și transferurile viitoare
+
+Interfața este acum integrată în `apps/web`, inclusiv importul, verificarea, raportul, scenariile, ghidurile și exporturile. Direcția vizuală provine din site-ul Lovable al proprietarului. Instrucțiunile de mai jos se aplică și viitoarelor transferuri manuale.
 
 Repo-ul principal este Costsieve, independent de Lovable. Nu conecta aplicația GitHub Lovable, Git sync sau un plugin Lovable de build/runtime. Interfața se transferă manual și se conectează la API-ul din browser-integration.md; formulele rămân în motor.
 
@@ -15,4 +17,4 @@ După conectarea calculelor:
 - Buton „Cum implementez?” lângă fiecare recomandare, folosind ghidul versionat din motor.
 - Secțiune Sponsor us și pagină Support neblocante, fără paywall sau întreruperea analizei. Linkul real de sponsorizare va fi furnizat de proprietar.
 
-Aceste animații și interfața publică nu sunt declarate implementate de livrarea motorului/MCP. Testează fluxul real, contrastul, tastatura, mobilul, lipsa scurgerilor în rețea și resetarea după integrare.
+Testul `npm run test:site` verifică interfața integrată în browser, inclusiv OCR, scenarii, export, navigare, mobil, contrast automat, tastatură și reducerea mișcării. Publicarea și verificarea domeniului rămân în grija proprietarului; vezi `cloudflare.md`.

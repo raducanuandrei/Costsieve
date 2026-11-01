@@ -20,6 +20,7 @@ npm ci
 npm run build
 npm test
 npm run test:browser
+npm run test:site
 ```
 
 Build prepares the OCR/PDF worker, WASM and language files from pinned installed dependencies. Dependency installation downloads software/assets, not document data. The engine makes no paid model API calls. Browser integration must serve the generated assets on its own origin.
@@ -40,9 +41,9 @@ Configure these command/arguments in a client that supports local stdio MCP. Do 
 
 ## Use in a browser
 
-The [browser integration guide](docs/browser-integration.md) documents the shared API and the exact confirmation/reconciliation workflow. The tested browser harness is a verification fixture, not a finished customer website. The Lovable interface remains a separate manual integration step.
+Run `npm run build`, then `npm run preview` to open the working site. `apps/web` preserves the supplied Lovable appearance and connects directly to the local analysis engine. The [browser integration guide](docs/browser-integration.md) documents the shared API. [Cloudflare instructions](docs/cloudflare.md) describe deployment of the static production build.
 
-The canonical repository is raducanuandrei/Costsieve. No Lovable GitHub App, Git sync, Lovable build plugin or automatic Lovable commits are required here. Reviewed interface code may be transferred manually later. No production deployment or domain change is part of this implementation.
+The canonical repository is raducanuandrei/Costsieve. The visual source was transferred manually from the separately owned motion-layer-mosaic repository. No Lovable GitHub App, Git sync, Lovable build plugin or automatic Lovable commits are required here. No production deployment or domain change is part of this implementation.
 
 ## Boundaries
 
@@ -50,4 +51,4 @@ One invoice per PDF/image file. Detected multiple invoice identities require spl
 
 Recorded result is derived from supplied revenue/expenses, not audited profit. Expenses alone cannot establish a business's profit or prove waste. Scenarios keep currencies/periods explicit and do not count source reconciliation as savings. Guides propose actions; the tool never changes a contract or moves money.
 
-The project is MIT-licensed, free to use, with voluntary sponsorship planned. [Implementation guides](docs/action-guides.md) and [the interface handoff](docs/interface-handoff.md) explain the next integration stage. No live sponsor destination, public publication or deployed website is claimed.
+The project is MIT-licensed and free to use. The support page is present; its payment destination remains explicitly unconfigured. [Implementation guides](docs/action-guides.md) explain how to investigate and implement a recommended change. No deployed website is claimed.

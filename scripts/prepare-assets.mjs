@@ -11,7 +11,7 @@ await copyFile(require.resolve('tesseract.js/dist/worker.min.js'), join(root, 'w
 const core = dirname(require.resolve('tesseract.js-core'));
 for (const name of await readdir(core)) if (/\.(wasm|js)$/.test(name) && name.startsWith('tesseract-core')) await copyFile(join(core, name), join(root, 'core', name));
 await copyFile(require.resolve('pdfjs-dist/build/pdf.worker.min.mjs'), join(root, 'pdf.worker.min.mjs'));
-for (const packageName of ['pdfjs-dist', 'tesseract.js', 'tesseract.js-core', '@tesseract.js-data/eng', '@tesseract.js-data/ron']) {
+for (const packageName of ['pdfjs-dist', 'tesseract.js', 'tesseract.js-core', '@tesseract.js-data/eng', '@tesseract.js-data/ron', 'react', 'react-dom', '@tanstack/react-router', 'lucide-react', '@fontsource/ibm-plex-sans', '@fontsource/ibm-plex-mono', '@fontsource/space-grotesk', 'read-excel-file', 'fflate', 'papaparse', 'decimal.js']) {
   const packageRoot = dirname(require.resolve(`${packageName}/package.json`));
   const target = join(root, 'licenses', packageName.replaceAll('/', '_').replaceAll('@', ''));
   await mkdir(target, { recursive: true });

@@ -20,12 +20,12 @@ function reconciliationGroups(records: ReviewRecord[]): ReviewDraft['reconciliat
 }
 
 export class AnalysisSession {
-  private state: { draft: ReviewDraft; touched: number; decision?: ReviewDecision; input?: ImportResult<NormalizedRecord>; result?: ReturnType<AnalysisSession['buildResult']> } | undefined;
+  private state: { draft: ReviewDraft; touched: number; decision?: ReviewDecision; input?: ImportResult<NormalizedRecord>; result?: ReturnType<AnalysisSession['buildResult']>; scenario?: ReturnType<typeof simulateActions> } | undefined;
   private generation = 0;
   private controller: AbortController | undefined;
   private timer: ReturnType<typeof setTimeout> | undefined;
-  private readonly config: { extractor?: DocumentExtractor; now?: () => number; ttlMs?: number };
-  constructor(config: { extractor?: DocumentExtractor; now?: () => number; ttlMs?: number } = {}) { this.config = config; }
+  private readonly config: { extractor?: DocumentExtractor; now?: () => number; ttlMs?: number; dataOrigin?: 'USER_SUPPLIED' | 'SYNTHETIC_DEMO' };
+  constructor(config: { extractor?: DocumentExtractor; now?: () => number; ttlMs?: number; dataOrigin?: 'USER_SUPPLIED' | 'SYNTHETIC_DEMO' } = {}) { this.config = config; }
   private clock() { return this.config.now?.() ?? Date.now(); }
   private touch() {
     if (!this.state) return;
@@ -45,6 +45,7 @@ export class AnalysisSession {
     if (this.timer) clearTimeout(this.timer); this.timer = undefined;
   }
   review(id: string) { return copy(this.active(id).draft); }
+  keepAlive(id: string) { this.active(id); }
 
   async prepare(files: InputDocument[], options: { signal?: AbortSignal; fileOptions?: Record<string, FileOptions>; onProgress?: (event: { documentId: string; stage: string; progress: number }) => void } = {}) {
     this.clear();
@@ -129,7 +130,7 @@ export class AnalysisSession {
   }
 
   private buildResult(input: ImportResult<NormalizedRecord>, decision: ReviewDecision, coverage: { totalRecords: number; confirmedRecords: number; excludedRecords: number; reconciledRecords: number; excludedDocuments: number }) {
-    const analysis = analyzeRecords(input, { usage: decision.usage ?? [] });
+    const analysis = analyzeRecords(input, { usage: decision.usage ?? [], ...(this.config.dataOrigin ? { dataOrigin: this.config.dataOrigin } : {}) });
     const partial = Boolean(coverage.excludedRecords || coverage.excludedDocuments);
     analysis.report.status = partial ? 'partial' : 'complete';
     analysis.report.coverage = { totalRows: coverage.totalRecords - coverage.reconciledRecords, validRows: coverage.confirmedRecords, excludedRows: coverage.excludedRecords, issues: partial ? [{ row: null, code: 'EXPLICIT_EXCLUSIONS', message: `${coverage.excludedRecords} records and ${coverage.excludedDocuments} documents explicitly excluded. Unreadable documents may contain additional unknown amounts.` }] : [] };
@@ -140,6 +141,7 @@ export class AnalysisSession {
   complete(id: string, incoming: ReviewDecision) {
     if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming) || Object.keys(incoming).some(key => !['confirmedRecordIds', 'excludedRecordIds', 'excludedDocumentIds', 'corrections', 'reconciliations', 'separatePurchaseGroups', 'usage'].includes(key))) throw new Error('Unsupported review decision fields.');
     const state = this.active(id), decision: ReviewDecision = { ...state.decision, ...incoming };
+    delete state.scenario;
     const byId = new Map(state.draft.records.map(record => [record.recordId, copy(record)]));
     const exclude = new Set(decision.excludedRecordIds ?? []), documents = new Set(decision.excludedDocumentIds ?? []), confirmed = new Set(decision.confirmedRecordIds ?? []);
     for (const recordId of [...exclude, ...confirmed]) if (!byId.has(recordId)) throw new Error('Decision references an unknown record.');
@@ -152,7 +154,7 @@ export class AnalysisSession {
     }
     state.draft.records = copy([...byId.values()]);
     state.draft.reconciliations = reconciliationGroups(state.draft.records);
-    if (decision.corrections?.length) { delete state.input; delete state.result; }
+    if (incoming.corrections?.length) { delete state.input; delete state.result; }
     const reconciled = new Set<string>();
     const kept = new Set<string>();
     for (const link of decision.reconciliations ?? []) {
@@ -178,11 +180,11 @@ export class AnalysisSession {
     const input = validateLedgerRows(rows);
     const coverage = { totalRecords: state.draft.records.length, confirmedRecords: input.rows.length, excludedRecords: state.draft.records.length - input.rows.length - reconciled.size, reconciledRecords: reconciled.size, excludedDocuments: documents.size };
     const result = this.buildResult(input, decision, coverage);
-    state.input = input; state.result = result; state.decision = copy(decision);
+    state.input = input; state.result = result; state.decision = copy(decision); delete state.scenario;
     return copy(result);
   }
-  result(id: string) { const state = this.active(id); if (!state.result) throw new Error('Complete and confirm the analysis first.'); return copy(state.result); }
-  simulate(id: string, actions: CostAction[], options: { currency: string; implementationCost?: string }) { const state = this.active(id); if (!state.input) throw new Error('Confirm the analysis first.'); return simulateActions(state.input, actions, options); }
+  result(id: string) { const state = this.active(id); if (!state.result) throw new Error('Complete and confirm the analysis first.'); return copy({ ...state.result, ...(state.scenario ? { scenario: state.scenario } : {}) }); }
+  simulate(id: string, actions: CostAction[], options: { currency: string; implementationCost?: string }) { const state = this.active(id); if (!state.input) throw new Error('Confirm the analysis first.'); delete state.scenario; const result = simulateActions(state.input, actions, options); state.scenario = copy(result); return result; }
   guide(id: string, recommendationId: string) { const result = this.result(id); const item = result.analysis.recommendations.find(item => item.id === recommendationId); if (!item) throw new Error('Unknown recommendation.'); return getActionGuide(item.kind as RecommendationKind); }
-  report(id: string, format: 'json' | 'csv') { const result = this.result(id); return format === 'csv' ? exportAnalysisCsv(result.analysis) : JSON.stringify(result, null, 2); }
+  report(id: string, format: 'json' | 'csv') { const result = this.result(id); return format === 'csv' ? exportAnalysisCsv(result.analysis, result.scenario) : JSON.stringify(result, null, 2); }
 }

@@ -27,6 +27,7 @@ function reviewPage(draft: ReviewDraft, offset = 0, limit = 50) {
   return { id: draft.id, documents: draft.documents, recordCount: records.length, offset, nextOffset: offset + limit < records.length ? offset + limit : null, records: records.slice(offset, offset + limit).map(({ fields: { transactionId: _privateId, ...fields }, ...record }) => ({ ...record, fields })), reconciliations: draft.reconciliations.slice(0, 100).map(group => ({ ...group, recordIds: group.recordIds.slice(0, 100), recordCount: group.recordIds.length })), reconciliationCount: draft.reconciliations.length, disclosure: 'Processing is local. Returned fields and summaries can be sent to the connected AI provider by the host application. Raw OCR text is not returned. Confirm invoice fields and resolve source reconciliation before analysis.' };
 }
 function compactResult(result: ReturnType<AnalysisSession['result']>, offset = 0, limit = 20) {
+  if (result.scenario) result.scenario.effects = result.scenario.effects.map(effect => ({ ...effect, targetRecordIds: effect.targetRecordIds.slice(0, 10) }));
   const report = result.analysis.report;
   const counts = { currencies: report.currencies.length, vendors: report.byVendor.length, categories: report.byCategory.length, months: report.byMonth.length, recommendations: result.analysis.recommendations.length };
   const nextOffset = offset + limit < Math.max(...Object.values(counts)) ? offset + limit : null;
@@ -76,7 +77,7 @@ export function createCostSieveServer(config: { allowedRoots: string[] }) {
       const compact = compactResult(session.result(draftId), offset, limit);
       if (format === 'json') return response(compact);
       const { exportAnalysisCsv } = await import('@costsieve/engine');
-      const csv = `${exportAnalysisCsv(compact.analysis)}\r\nmetadata,report,,detailPage,"${JSON.stringify(compact.page).replaceAll('"', '""')}",MEASURED\r\nmetadata,report,,detailLimits,"${compact.detailLimits.replaceAll('"', '""')}",MEASURED`;
+      const csv = `${exportAnalysisCsv(compact.analysis, compact.scenario)}\r\nmetadata,report,,detailPage,"${JSON.stringify(compact.page).replaceAll('"', '""')}",MEASURED\r\nmetadata,report,,detailLimits,"${compact.detailLimits.replaceAll('"', '""')}",MEASURED`;
       return response({ format: 'csv', csv, page: compact.page, detailLimits: compact.detailLimits });
     } catch (error) { return failure(error); }
   });

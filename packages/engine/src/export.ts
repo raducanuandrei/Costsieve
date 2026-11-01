@@ -1,7 +1,7 @@
 import Papa from 'papaparse';
 import type { BusinessReport, MoneyTotals } from './types.ts';
 import type { ScenarioResult } from './scenario.ts';
-import type { BusinessAnalysis } from './actions.ts';
+import type { BusinessAnalysis, simulateActions } from './actions.ts';
 
 function safeText(value: string): string {
   return /^[\s\u0000-\u001f\u007f]*[=+\-@]/.test(value) || /^[\t\r\n]/.test(value) ? `'${value}` : value;
@@ -57,12 +57,17 @@ export function exportReportJson(report: BusinessReport, scenario?: ScenarioResu
   return JSON.stringify(scenario ? { ...report, scenario } : report, null, 2);
 }
 
-export function exportAnalysisCsv(analysis: BusinessAnalysis): string {
+export function exportAnalysisCsv(analysis: BusinessAnalysis, scenario?: ReturnType<typeof simulateActions>): string {
   const records: { dimension: string; label: string; currency: string; metric: string; value: string; classification: string }[] = [];
   for (const item of analysis.recommendations) {
     const values = { explanation: item.explanation, caveat: item.caveat, period: `${item.period.from} to ${item.period.to}`, targets: item.targetRecordIds.join(', '), ...(item.estimatedSavings !== null ? { estimatedSavings: item.estimatedSavings } : {}) };
     for (const [metric, value] of Object.entries(values)) records.push({ dimension: 'recommendation', label: safeText(item.id), currency: item.currency, metric, value: safeText(value), classification: item.estimatedSavings === null ? 'MEASURED' : 'ESTIMATED' });
   }
+  if (scenario) for (const metric of ['baselineExpense', 'projectedExpense', 'hypotheticalSavings', 'implementationCost', 'netBenefit', 'recordedResultBefore', 'recordedResultAfter', 'basis', 'assumptions'] as const) {
+    const value = scenario[metric];
+    if (value !== null) records.push({ dimension: 'scenario', label: 'selected actions', currency: scenario.currency, metric, value: /^-?\d+(?:\.\d+)?$/.test(value) ? value : safeText(value), classification: 'HYPOTHETICAL' });
+  }
+  if (scenario) records.push({ dimension: 'scenario', label: 'selected actions', currency: scenario.currency, metric: 'period', value: `${scenario.period.from} to ${scenario.period.to}`, classification: 'HYPOTHETICAL' });
   if (!records.length) return exportSummaryCsv(analysis.report);
   const appended = Papa.unparse(records, { header: false, newline: '\r\n', columns: ['dimension', 'label', 'currency', 'metric', 'value', 'classification'] });
   return `${exportSummaryCsv(analysis.report)}\r\n${appended}`;

@@ -40,11 +40,11 @@ export function validateLedgerRows(input: unknown[]): ImportResult<NormalizedRec
   return { rows, totalRows: rows.length, errors: [], format: 'costsieve-ledger-v1' };
 }
 
-export function analyzeRecords(input: ImportResult<NormalizedRecord>, context: { usage?: UsageAnswer[]; generatedAt?: string } = {}): BusinessAnalysis {
+export function analyzeRecords(input: ImportResult<NormalizedRecord>, context: { usage?: UsageAnswer[]; generatedAt?: string; dataOrigin?: 'USER_SUPPLIED' | 'SYNTHETIC_DEMO' } = {}): BusinessAnalysis {
   const validated = validateLedgerRows(input.rows);
   // Legacy evidence uses row numbers; unique internal numbers are remapped to qualified sources below.
   const numbered = validated.rows.map((row, index) => ({ ...row, sourceRow: index + 2 }));
-  const report = analyzeBusiness({ ...input, rows: numbered }, context.generatedAt ? { generatedAt: context.generatedAt } : {});
+  const report = analyzeBusiness({ ...input, rows: numbered }, { ...(context.generatedAt ? { generatedAt: context.generatedAt } : {}), ...(context.dataOrigin ? { dataOrigin: context.dataOrigin } : {}) });
   const index = new Map(numbered.map(row => [row.sourceRow, row]));
   const recommendations: Recommendation[] = report.findings.filter(item => item.evidenceSource === 'ledger').map(item => {
     const targets = item.evidenceRows.map(row => index.get(row)!).filter(Boolean);

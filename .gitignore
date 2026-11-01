@@ -7,4 +7,5 @@ reports/
 test-results/
 playwright-report/
 .superpowers/
+.tanstack/
 packages/imports/assets/
