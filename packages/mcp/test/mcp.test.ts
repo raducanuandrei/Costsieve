@@ -15,7 +15,7 @@ const allowed = join(root, 'allowed'), outside = join(root, 'outside');
 await mkdir(allowed); await mkdir(outside);
 const csv = 'date,vendor,category,amount,currency,kind\n2026-09-01,Tools,software,100,USD,expense';
 await writeFile(join(allowed, 'ledger.csv'), csv); await writeFile(join(outside, 'private.csv'), csv);
-after(async () => { for (const folder of [allowed, outside]) { for (const name of await readdir(folder)) { const path = join(folder, name); if (name === 'escape') await rmdir(path); else await unlink(path); } await rmdir(folder); } await rmdir(root); });
+after(async () => { for (const folder of [allowed, outside]) { for (const name of await readdir(folder)) { const path = join(folder, name); if (name === 'escape' && process.platform === 'win32') await rmdir(path); else await unlink(path); } await rmdir(folder); } await rmdir(root); });
 
 test('allows selected local files and rejects traversal, outside roots and symlink escapes', async () => {
   assert.match(await resolveApprovedFile(join(allowed, 'ledger.csv'), [allowed]), /ledger\.csv$/);
