@@ -1,0 +1,41 @@
+{
+  "name": "@costsieve/engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local business spending analysis for CostSieve",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    }
+  },
+  "files": [
+    "dist/src",
+    "fixtures",
+    "README.md",
+    "THIRD_PARTY_NOTICES.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --experimental-strip-types --test test/*.test.ts",
+    "demo": "node dist/src/cli.js --demo",
+    "check:browser": "esbuild src/index.ts --bundle --platform=browser --format=esm --outfile=dist/browser/engine.js"
+  },
+  "dependencies": {
+    "decimal.js": "10.6.0",
+    "papaparse": "5.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "@types/papaparse": "5.5.2",
+    "esbuild": "0.28.2",
+    "typescript": "5.9.3"
+  }
+}

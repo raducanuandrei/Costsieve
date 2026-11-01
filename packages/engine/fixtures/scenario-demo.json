@@ -1,0 +1,5 @@
+{
+  "currency": "USD",
+  "changes": [{ "id": "workspace-negotiation", "vendor": "Workspace", "reductionPercent": "20" }],
+  "implementationCost": "10"
+}

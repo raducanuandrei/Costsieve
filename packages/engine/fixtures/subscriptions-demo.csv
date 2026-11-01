@@ -1,0 +1,4 @@
+subscription_id,vendor,currency,amount_per_cycle,billing_cycle,seats,active_seats
+workspace,Workspace,USD,100,monthly,10,6
+design,Design Tools,USD,480,annual,4,2
+hosting,Hosting,USD,350,monthly,,

@@ -1,0 +1,24 @@
+{
+  "name": "costsieve",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "assets": "node scripts/prepare-assets.mjs",
+    "build": "npm run assets && npm run build -w @costsieve/engine && npm run build -w @costsieve/imports && npm run build -w @costsieve/mcp",
+    "test": "npm run build && node --test packages/engine/test/*.test.ts packages/imports/test/*.test.ts packages/mcp/test/*.test.ts",
+    "test:engine": "npm test -w @costsieve/engine",
+    "check:browser": "npm run check:browser -w @costsieve/imports",
+    "test:browser": "npm run check:browser && node --test test/browser.test.ts",
+    "mcp": "node packages/mcp/dist/src/cli.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "pdf-lib": "1.17.1"
+  }
+}
