@@ -18,7 +18,7 @@ Input bounds reduce resource abuse and parser exposure. They do not make documen
 
 The audit skill treats retrieved documents as untrusted data and requests read-only tools and separate authorization for business changes. These instructions do not enforce another AI host's permissions or eliminate prompt injection. Restrict connector access in that host, inspect evidence and approve consequential actions there.
 
-The public site should serve over healthy HTTPS, keep GitHub/Cloudflare administrative access protected, and verify domain routing, response headers and account-level security rules. See [Cloudflare release checks and prepared scan-path rule](docs/cloudflare.md). Do not collect raw financial documents in analytics, public issues or logs. Business-data downloads, printouts, clipboard contents and user submission to another AI provider remain outside the in-memory session.
+The public site should serve over healthy HTTPS, keep GitHub/Cloudflare administrative access protected, and verify domain routing, response headers and account-level security rules. See [Cloudflare release checks and the activated apex scan-path rule](docs/cloudflare.md) for the canonical domain's current status. Do not collect raw financial documents in analytics, public issues or logs. Business-data downloads, printouts, clipboard contents and user submission to another AI provider remain outside the in-memory session.
 
 ## Reporting a vulnerability
 
