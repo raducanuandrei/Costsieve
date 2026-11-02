@@ -1,8 +1,24 @@
-# Deploy CostSieve on Cloudflare Pages
+# Deploy CostSieve on Cloudflare
 
 The production site is a static Vite/React application. The original TanStack Start/Lovable build wrapper was replaced with Vite and TanStack Router. No server, Supabase account, secrets or paid model service is required for this local analysis workflow.
 
-Connect only the `raducanuandrei/Costsieve` repository to Cloudflare Pages:
+Connect only the `raducanuandrei/Costsieve` repository. The existing `costsieve` project uses Workers Builds; Pages is also supported as an alternative. Both serve the same static build without a PHP server or document API.
+
+## Existing Workers project: costsieve
+
+- Production branch: `feat/document-analysis` until PR #1 is merged, then `main`. The current main branch contains the original engine rather than the integrated website.
+- Root directory: `/` (repository root).
+- Build command: `npm run build`.
+- Deploy command: `npx wrangler@4.156.1 deploy`.
+- Node: 24, selected by the repository's `.node-version`; a pre-existing NODE_VERSION build variable takes precedence and must agree.
+
+The root `wrangler.json` explicitly selects `apps/web/dist` as the static asset directory and native single-page application handling. It matches the existing Worker name `costsieve` and compatibility date. No application Worker script, account ID, credential, backend binding or domain change is required to package the site. Build must run before deploy; Wrangler does not replace the monorepo build command.
+
+On 2 November the failed build was configured with production branch main, no build command, root `/` and `npx wrangler deploy`. The repository lacked a Wrangler asset configuration. These settings explain the missing static-directory error. The npm message about installing Wrangler is informational.
+
+## Pages alternative
+
+For a Pages project use:
 
 - Production branch: the branch containing this integration (`feat/document-analysis` until the pull request is merged; then `main`).
 - Root directory: repository root (leave blank).
@@ -11,13 +27,15 @@ Connect only the `raducanuandrei/Costsieve` repository to Cloudflare Pages:
 - Environment variable: `NODE_VERSION=24`.
 - Framework preset: None.
 
-The root build prepares and copies the PDF worker, OCR worker/WASM and English/Romanian models. Do not deploy just the HTML/JS files or omit `costsieve-assets`. `_redirects` supports direct routes such as `/analyze`; `_headers` supplies the same-origin content policy and security headers. There is no upload API or document persistence.
+The root build prepares and copies the PDF worker, OCR worker/WASM and English/Romanian models. Do not deploy just the HTML/JS files or omit `costsieve-assets`. Workers uses its configured native SPA fallback; Pages uses its default SPA behavior because there is no top-level 404.html. The former catch-all `_redirects` rewrite was removed after Wrangler reported it as an infinite loop. `_headers` supplies the same-origin content policy and security headers for static responses. There is no upload API or document persistence.
 
 Before publishing, preview `/analyze`, import a small ledger, confirm a PDF invoice, run an image through OCR, apply a scenario, export it and reset. Verify that requests for workers/models return their actual files and that there are no blocked worker/WASM requests. Local browser tests verify these flows; Cloudflare production headers and routing still need this final deployment smoke check.
 
 The sponsor section deliberately has no payment destination until the owner supplies one. The original Lovable repository remains separate and is not modified or connected to the canonical repository. Future Lovable design changes must be transferred and reviewed manually.
 
 Platform reference: [build configuration](https://developers.cloudflare.com/pages/configuration/build-configuration/), [Node version configuration](https://developers.cloudflare.com/pages/configuration/build-image/), [SPA serving](https://developers.cloudflare.com/pages/configuration/serving-pages/) and [response headers](https://developers.cloudflare.com/pages/configuration/headers/).
+
+Workers references: [build configuration](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/), [build image](https://developers.cloudflare.com/workers/ci-cd/builds/build-image/), [SPA assets](https://developers.cloudflare.com/workers/static-assets/routing/single-page-application/) and [static headers](https://developers.cloudflare.com/workers/static-assets/headers/).
 
 ## Security release checks
 

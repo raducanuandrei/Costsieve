@@ -4,6 +4,7 @@ reports/
 .env*
 *.log
 .cache/
+.wrangler/
 test-results/
 playwright-report/
 .superpowers/
