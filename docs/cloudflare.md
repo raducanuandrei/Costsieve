@@ -6,7 +6,7 @@ Connect only the `raducanuandrei/Costsieve` repository. The existing `costsieve`
 
 ## Existing Workers project: costsieve
 
-- Production branch: `feat/document-analysis` until PR #1 is merged, then `main`. The current main branch contains the original engine rather than the integrated website.
+- Production branch: `main` after PR #1 is merged. Use `feat/document-analysis` only for an unmerged preview.
 - Root directory: `/` (repository root).
 - Build command: `npm run build`.
 - Deploy command: `npx wrangler@4.156.1 deploy`.
