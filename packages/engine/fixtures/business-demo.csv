@@ -1,0 +1,17 @@
+date,vendor,category,amount,currency,kind,transaction_id,description
+2026-07-01,Workspace,software,100,USD,expense,exp-001,Synthetic monthly workspace
+2026-07-05,Hosting,infrastructure,250,USD,expense,exp-002,Synthetic hosting
+2026-07-15,Sales,sales,3000,USD,revenue,rev-001,Synthetic sales
+2026-08-01,Workspace,software,100,USD,expense,exp-003,Synthetic monthly workspace
+2026-08-05,Hosting,infrastructure,300,USD,expense,exp-004,Synthetic hosting
+2026-08-15,Sales,sales,3300,USD,revenue,rev-002,Synthetic sales
+2026-09-01,Workspace,software,100,USD,expense,exp-005,Synthetic monthly workspace
+2026-09-05,Hosting,infrastructure,350,USD,expense,exp-006,Synthetic hosting
+2026-09-09,Design Tools,software,40,USD,expense,exp-007,Synthetic possible duplicate - verify
+2026-09-09,Design Tools,software,40,USD,expense,exp-008,Synthetic separate ID - not proven waste
+2026-09-10,Supplies,operations,200,USD,expense,exp-009,Synthetic supplies
+2026-09-11,Supplies,operations,20,USD,expense_refund,ref-001,Synthetic refund
+2026-09-15,Sales,sales,4000,USD,revenue,rev-003,Synthetic sales
+2026-09-17,Sales,sales,100,USD,revenue_refund,ref-002,Synthetic customer refund
+2026-09-19,Bank,internal,1000,USD,transfer,tr-001,Synthetic internal transfer - not revenue
+2026-09-20,Freelancer,services,300,EUR,expense,exp-010,Synthetic other currency

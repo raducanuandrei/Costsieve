@@ -1,0 +1,13 @@
+node_modules/
+dist/
+reports/
+.env*
+*.log
+.cache/
+.wrangler/
+test-results/
+playwright-report/
+.superpowers/
+.tanstack/
+packages/imports/assets/
+apps/web/public/skills/
