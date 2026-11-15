@@ -24,12 +24,12 @@
   },
   "dependencies": {
     "@costsieve/engine": "0.1.0",
-    "@napi-rs/canvas": "1.1.0",
+    "@napi-rs/canvas": "1.1.1",
     "@tesseract.js-data/eng": "1.0.0",
     "@tesseract.js-data/ron": "1.0.0",
     "fflate": "0.8.3",
-    "pdfjs-dist": "6.4.299",
-    "read-excel-file": "9.3.14",
+    "pdfjs-dist": "6.5.438",
+    "read-excel-file": "9.3.15",
     "tesseract.js": "7.0.0"
   }
 }
